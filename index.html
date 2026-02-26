@@ -1,0 +1,254 @@
+<!doctype html>
+<html>
+  <head>
+    <title>SharePoint CRUD Web App</title>
+    <style>
+      body {
+        font-family: Arial;
+        padding: 20px;
+      }
+
+      h2 {
+        margin-bottom: 15px;
+      }
+
+      input,
+      select {
+        padding: 6px;
+        margin-right: 5px;
+      }
+
+      button {
+        padding: 6px 10px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+      }
+
+      .save-btn {
+        background: #0078d4;
+        color: white;
+      }
+
+      .edit-btn {
+        background: orange;
+        color: white;
+      }
+
+      .delete-btn {
+        background: red;
+        color: white;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+      }
+
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+
+      th {
+        background: #f4f4f4;
+      }
+
+      .badge-open {
+        color: white;
+        background: red;
+        padding: 3px 6px;
+        border-radius: 4px;
+      }
+
+      .badge-progress {
+        color: white;
+        background: orange;
+        padding: 3px 6px;
+        border-radius: 4px;
+      }
+
+      .badge-closed {
+        color: white;
+        background: green;
+        padding: 3px 6px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>SharePoint Task List</h2>
+
+    <input id="title" placeholder="Title" />
+    <select id="status">
+      <option value="">Select Status</option>
+      <option value="Open">Open</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Closed">Closed</option>
+    </select>
+    <input id="description" placeholder="Description" />
+    <button id="saveBtn" class="save-btn" onclick="saveItem()">Save</button>
+
+    <table id="taskTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Description</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <script>
+      // 🔴 REPLACE THESE WITH YOUR REAL FLOW URLS
+      const GET_URL =
+        "https://default8c09b36f1cd84669856e1f79d5e305.da.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/8b3f96299afb4924a1bfd4f59bf8ed04/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=I3bskmZXHwlIlrPJNDCqBKu9NqeNOgCVcy3p4EZDdKo";
+      const SAVE_URL =
+        "https://default8c09b36f1cd84669856e1f79d5e305.da.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/e7a10599ed564d0385f44aa39a0da194/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=2yod0uj1vslGE8EIR43aNcEhqBFCJYMveN8hF1yC9N8";
+      const DELETE_URL =
+        "https://default8c09b36f1cd84669856e1f79d5e305.da.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/184f8c2b589d4d7287115e61cdbffac5/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=VHK4BtPh-TNlMWywCnPwJbCmGO82MqwZ1M5QFk7-Jjg";
+
+      let editId = null;
+
+      // ========================
+      // LOAD LIST
+      // ========================
+      async function loadList() {
+        const res = await fetch(GET_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+
+        const data = await res.json();
+        const items = data.value || data;
+
+        const tbody = document.querySelector("#taskTable tbody");
+        tbody.innerHTML = "";
+
+        items.forEach((item) => {
+          let statusBadge = item.Status;
+
+          if (item.Status === "Open") {
+            statusBadge = `<span class="badge-open">Open</span>`;
+          } else if (item.Status === "In Progress") {
+            statusBadge = `<span class="badge-progress">In Progress</span>`;
+          } else if (item.Status === "Closed") {
+            statusBadge = `<span class="badge-closed">Closed</span>`;
+          }
+
+          tbody.innerHTML += `
+        <tr>
+          <td>${item.ID}</td>
+          <td>${item.Title || ""}</td>
+          <td>${statusBadge || ""}</td>
+          <td>${item.Description || ""}</td>
+          <td>
+            <button class="edit-btn"
+              onclick="editItem(${item.ID}, '${item.Title || ""}', '${item.Status || ""}', '${item.Description || ""}')">
+              Edit
+            </button>
+            <button class="delete-btn"
+              onclick="deleteItem(${item.ID})">
+              Delete
+            </button>
+          </td>
+        </tr>
+      `;
+        });
+      }
+
+      // ========================
+      // EDIT
+      // ========================
+      function editItem(id, title, status, description) {
+        editId = id;
+        document.getElementById("title").value = title || "";
+        document.getElementById("status").value = status || "";
+        document.getElementById("description").value = description || "";
+      }
+
+      // ========================
+      // SAVE (CREATE + UPDATE)
+      // ========================
+      async function saveItem() {
+        const btn = document.getElementById("saveBtn");
+        btn.disabled = true;
+
+        const title = document.getElementById("title").value;
+        const status = document.getElementById("status").value;
+        const description = document.getElementById("description").value;
+
+        const payload = { title, status, description };
+
+        if (editId !== null) {
+          payload.id = editId;
+        }
+
+        try {
+          const res = await fetch(SAVE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            throw new Error("Save failed");
+          }
+
+          alert("Saved successfully ✅");
+
+          // Reset
+          editId = null;
+          document.getElementById("title").value = "";
+          document.getElementById("status").value = "";
+          document.getElementById("description").value = "";
+
+          loadList();
+        } catch (error) {
+          alert("Error saving ❌");
+          console.error(error);
+        }
+
+        btn.disabled = false;
+      }
+
+      // ========================
+      // DELETE
+      // ========================
+      async function deleteItem(id) {
+        const confirmDelete = confirm(
+          "Are you sure you want to delete this item?",
+        );
+        if (!confirmDelete) return;
+
+        try {
+          const res = await fetch(DELETE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+
+          if (!res.ok) {
+            throw new Error("Delete failed");
+          }
+
+          alert("Deleted successfully ✅");
+          loadList();
+        } catch (error) {
+          alert("Error deleting ❌");
+          console.error(error);
+        }
+      }
+
+      // Initial load
+      loadList();
+    </script>
+  </body>
+</html>
