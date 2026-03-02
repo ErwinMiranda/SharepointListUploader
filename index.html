@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>SharePoint CRUD Web App</title>
+    <title>Layovber Manager</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -10,7 +10,7 @@
       <!-- SIDEBAR -->
       <aside class="sidebar">
         <div class="logo">
-          <h2>Lufthansa Technik Philippines</h2>
+          <h2>BM Production Planning and Control</h2>
           <div class="accent-line"></div>
         </div>
 
@@ -40,67 +40,16 @@
         <header class="topbar">
           <div class="topbar-left">
             <button id="sidebarToggle" class="toggle-btn">☰</button>
-            <h1>Operations Dashboard</h1>
+            <h1>Layover Preparartion</h1>
           </div>
           <div class="user">Admin</div>
         </header>
 
-        <!-- KPI CARDS -->
-        <section class="kpi-section">
-          <div class="kpi-card">
-            <h3>Total Tasks</h3>
-            <p id="totalCount">0</p>
-          </div>
-
-          <div class="kpi-card">
-            <h3>Open</h3>
-            <p id="openCount">0</p>
-          </div>
-
-          <div class="kpi-card">
-            <h3>In Progress</h3>
-            <p id="progressCount">0</p>
-          </div>
-
-          <div class="kpi-card">
-            <h3>Closed</h3>
-            <p id="closedCount">0</p>
-          </div>
-        </section>
-
-        <!-- FORM CARD -->
-        <div class="card form-card">
-          <div class="form-grid">
-            <input id="title" placeholder="Task Title" />
-
-            <select id="status">
-              <option value="">Select Status</option>
-              <option value="Open">Open</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Closed">Closed</option>
-            </select>
-
-            <input id="description" placeholder="Description" />
-
-            <button id="saveBtn" class="btn-primary">Save Task</button>
-          </div>
-        </div>
-
         <!-- TABLE CARD -->
         <div class="card table-card">
           <section class="report-section">
-            <h2>Active Layover Registry</h2>
-
             <div class="carousel-wrapper">
-              <button class="glass-arrow left-arrow" id="arrowLeft">
-                &#10094;
-              </button>
-
               <div id="aircraftCarousel" class="aircraft-carousel"></div>
-
-              <button class="glass-arrow right-arrow" id="arrowRight">
-                &#10095;
-              </button>
             </div>
           </section>
         </div>
