@@ -1,9 +1,8 @@
-
 const API = CONFIG.API;
 const state = {
   editId: null,
   items: [],
-  isSaving: false
+  isSaving: false,
 };
 
 const el = {
@@ -11,15 +10,26 @@ const el = {
   status: document.getElementById("status"),
   description: document.getElementById("description"),
   saveBtn: document.getElementById("saveBtn"),
-  tbody: document.getElementById("taskBody")
+  tbody: document.getElementById("taskBody"),
 };
 const carousel = document.getElementById("aircraftCarousel");
 const leftArrow = document.getElementById("arrowLeft");
 const rightArrow = document.getElementById("arrowRight");
 const loader = document.getElementById("loadingOverlay");
-
-
-
+const airlineLogos = {
+  "BAW": "logos/BAW.png",
+  "DLH": "logos/DLH.png",
+  "UAE": "logos/UAE.png",
+  "CEB": "logos/CEB.png",
+  "PAL": "logos/PAL.png",
+  "JJP": "logos/JJP.png",
+  "URO": "logos/URO.png",
+  "BEL": "logos/BEL.png",
+  "PLM": "logos/PLM.png",
+};
+function getAirlineLogo(customer) {
+  return airlineLogos[customer] || "logos/default.png";
+}
 function showLoader() {
   loader.classList.remove("hidden");
 }
@@ -64,8 +74,18 @@ sidebarToggle.addEventListener("click", () => {
 });
 function formatDate(value) {
   if (!value) return "";
+
   const date = new Date(value);
-  return isNaN(date) ? "" : date.toLocaleDateString();
+  if (isNaN(date)) return "";
+
+  const options = {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  };
+
+  return date.toLocaleDateString("en-GB", options);
 }
 function calculateMetrics(inputDate, outputDate) {
   if (!inputDate) {
@@ -77,9 +97,9 @@ function calculateMetrics(inputDate, outputDate) {
   const output = outputDate ? new Date(outputDate) : null;
 
   // Remove time portion
-  today.setHours(0,0,0,0);
-  input.setHours(0,0,0,0);
-  if (output) output.setHours(0,0,0,0);
+  today.setHours(0, 0, 0, 0);
+  input.setHours(0, 0, 0, 0);
+  if (output) output.setHours(0, 0, 0, 0);
 
   // If today is greater than output date → blank rank
   if (output && today > output) {
@@ -89,53 +109,75 @@ function calculateMetrics(inputDate, outputDate) {
   const diffMs = today - input;
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
+  let rank = -diffDays;
+
+  // 🔹 Adjust rank based on sign
+  if (rank < 0) {
+    rank -= 1; // add -1
+  } else if (rank > 0) {
+    rank += 0; // add +1
+  }
+
   return {
-    rank: -diffDays,
-   daysSince: diffDays + 1
+    rank: rank,
+    daysSince: diffDays + 1,
   };
 }
 function renderAircraftCards() {
-
   const container = document.getElementById("aircraftCarousel");
   container.innerHTML = "";
 
-  state.items.forEach(item => {
-
-    // Skip completed aircraft (rank null)
+  state.items.forEach((item) => {
     if (item.rank === null) return;
 
     const card = document.createElement("div");
     card.className = "aircraft-card";
 
+    let rankDisplay = "";
+
+    if (item.rank < 0) {
+      rankDisplay = `Day <span class="rank-number">${Math.abs(item.rank)}</span>`;
+    } else if (item.rank > 0) {
+      rankDisplay = `<span class="rank-number">${item.rank}</span> Day(s) To Input`;
+    } else {
+      rankDisplay = `Day <span class="rank-number">1</span>`;
+    }
+
     card.innerHTML = `
-      <div class="rank-badge">Rank ${item.rank}</div>
+  <div class="airline-logo-float">
+  <img
+    src="${getAirlineLogo(item.Customer)}"
+    alt="${item.Customer}"
+  />
+</div>
 
-      <div class="aircraft-header">${item.Title}</div>
-      <div class="aircraft-sub">${item.Customer}</div>
+<div class="aircraft-header">${item.Title}
 
-      <div class="aircraft-meta"><strong>Check:</strong> ${item.CheckType || ""}</div>
+<div class="aircraft-ctype">${item.CheckType || ""}</div>
+<div class="rank-badge">${rankDisplay}</div>
+</div>
+<div class="aircraft-sub">_________________________________________________</div>
+      <div class="aircraft-meta"><strong>Bay Production:</strong> ${item.BayProduction || ""}
+      <div class="aircraft-hangar"><strong>Hangar:</strong> ${item.BayParking || ""}</div>
+      </div>
+      
       <div class="aircraft-meta"><strong>Input:</strong> ${formatDate(item.InputDate)}</div>
       <div class="aircraft-meta"><strong>Output:</strong> ${formatDate(item.OutputDate)}</div>
       <div class="aircraft-meta"><strong>TAT:</strong> ${item.TAT || ""} Days</div>
+      <div class="aircraft-meta"><strong>WO:</strong> ${item.ParentWO || ""}</div>
+      <div class="mspart">
+     <div class="aircraft-meta">
+  <strong>MS target: WP, AMM & Job Cards</strong>
+  <span class="ms-date">${formatDate(item.WP_AMM_JC_Target)}</span>
+</div>       
     `;
 
     container.appendChild(card);
   });
-  setTimeout(updateArrowVisibility, 100);
+
+
 }
-function updateArrowVisibility() {
-  if (!carousel) return;
 
-  const maxScrollLeft = carousel.scrollWidth - carousel.clientWidth;
-
-  const tolerance = 3; // small buffer for pixel rounding
-
-  const atStart = carousel.scrollLeft <= tolerance;
-  const atEnd = carousel.scrollLeft >= (maxScrollLeft - tolerance);
-
-  leftArrow.classList.toggle("hidden", atStart);
-  rightArrow.classList.toggle("hidden", atEnd);
-}
 // =====================
 // GENERIC API CALL
 // =====================
@@ -145,13 +187,13 @@ async function apiCall(url, payload = {}) {
   try {
     const securePayload = {
       ...payload,
-      secret: CONFIG.SECRET
+      secret: CONFIG.SECRET,
     };
 
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(securePayload)
+      body: JSON.stringify(securePayload),
     });
 
     if (!res.ok) {
@@ -159,7 +201,6 @@ async function apiCall(url, payload = {}) {
     }
 
     return await res.json().catch(() => null);
-
   } finally {
     hideLoader();
   }
@@ -174,21 +215,18 @@ async function loadList() {
 
     state.items = data || [];
     // Compute days since input
-state.items.forEach(item => {
- item.rank = calculateMetrics(item.InputDate, item.OutputDate).rank ;
+    state.items.forEach((item) => {
+      item.rank = calculateMetrics(item.InputDate, item.OutputDate).rank;
+    });
 
-});
+    // Sort descending (oldest first = highest priority)
+    state.items.sort((a, b) => {
+      if (a.rank === null) return 1;
+      if (b.rank === null) return -1;
 
-// Sort descending (oldest first = highest priority)
-state.items.sort((a, b) => {
+      return a.rank - b.rank;
+    });
 
-  if (a.rank === null) return 1;
-  if (b.rank === null) return -1;
-
-  return a.rank - b.rank;
-});
-
-   
     renderAircraftCards();
   } catch (err) {
     showToast("Failed to load data", "error");
@@ -196,17 +234,15 @@ state.items.sort((a, b) => {
   }
 }
 
-
 let velocity = 0;
 let direction = 0;
 let animationFrame = null;
 
-const acceleration = 1.2;  // faster ramp-up
-const maxSpeed = 25;       // max speed
-const friction = 0.95;     // inertia decay
+const acceleration = 1.2; // faster ramp-up
+const maxSpeed = 25; // max speed
+const friction = 0.95; // inertia decay
 
 function animate() {
-
   if (direction !== 0) {
     velocity += acceleration * direction;
 
@@ -214,13 +250,13 @@ function animate() {
     if (velocity < -maxSpeed) velocity = -maxSpeed;
   }
 
-carousel.scrollLeft = Math.max(
-  0,
-  Math.min(
-    carousel.scrollLeft + velocity,
-    carousel.scrollWidth - carousel.clientWidth
-  )
-);
+  carousel.scrollLeft = Math.max(
+    0,
+    Math.min(
+      carousel.scrollLeft + velocity,
+      carousel.scrollWidth - carousel.clientWidth,
+    ),
+  );
   // inertia
   velocity *= friction;
 
@@ -246,21 +282,16 @@ function stopScroll() {
   direction = 0;
 }
 
-/* Mouse support */
-leftArrow.addEventListener("mousedown", () => startScroll(-1));
-rightArrow.addEventListener("mousedown", () => startScroll(1));
+
 
 document.addEventListener("mouseup", stopScroll);
 
-/* Touch support */
-leftArrow.addEventListener("touchstart", () => startScroll(-1));
-rightArrow.addEventListener("touchstart", () => startScroll(1));
+
 
 document.addEventListener("touchend", stopScroll);
 // =====================
 // RENDER TABLE
 // =====================
-
 
 function renderStatus(status) {
   if (!status) return "";
@@ -274,9 +305,9 @@ function renderStatus(status) {
 }
 function updateKPIs() {
   const total = state.items.length;
-  const open = state.items.filter(i => i.Status === "Open").length;
-  const progress = state.items.filter(i => i.Status === "In Progress").length;
-  const closed = state.items.filter(i => i.Status === "Closed").length;
+  const open = state.items.filter((i) => i.Status === "Open").length;
+  const progress = state.items.filter((i) => i.Status === "In Progress").length;
+  const closed = state.items.filter((i) => i.Status === "Closed").length;
 
   document.getElementById("totalCount").textContent = total;
   document.getElementById("openCount").textContent = open;
@@ -288,7 +319,6 @@ function updateKPIs() {
 // SAVE
 // =====================
 async function saveItem() {
-
   //  Block if already saving
   if (state.isSaving) return;
 
@@ -317,7 +347,6 @@ async function saveItem() {
     resetForm();
     await loadList();
     showToast("Task saved successfully", "success");
-
   } catch (err) {
     showToast("Save failed", "error");
     console.error(err);
@@ -338,7 +367,7 @@ function deleteItem(id) {
 // EDIT
 // =====================
 function editItem(id) {
-  const item = state.items.find(i => i.ID == id);
+  const item = state.items.find((i) => i.ID == id);
   if (!item) return;
 
   state.editId = id;
@@ -357,11 +386,8 @@ function resetForm() {
 // =====================
 // EVENTS
 // =====================
-el.saveBtn.addEventListener("click", saveItem);
-
 
 confirmDeleteBtn.addEventListener("click", async () => {
-
   if (deleteTargetId == null) return;
 
   try {
@@ -370,7 +396,6 @@ confirmDeleteBtn.addEventListener("click", async () => {
     showToast("Task deleted successfully", "success");
     closeConfirmModal();
     await loadList();
-
   } catch (err) {
     showToast("Delete failed", "error");
     console.error(err);
@@ -384,12 +409,10 @@ cancelDeleteBtn.addEventListener("click", () => {
   closeConfirmModal();
 });
 document.addEventListener("DOMContentLoaded", () => {
-
   // Attach arrow listeners safely
-  carousel.addEventListener("scroll", updateArrowVisibility);
-  window.addEventListener("resize", updateArrowVisibility);
+ 
+ 
 
   // Load data
   loadList();
-
-});;
+});
