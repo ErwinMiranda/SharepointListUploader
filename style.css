@@ -3,6 +3,7 @@ body {
   font-family: "Segoe UI", Arial, sans-serif;
   background: #f4f6f9;
   color: #05164d;
+  overflow-y: hidden;
 }
 
 /* ================= DASHBOARD LAYOUT ================= */
@@ -139,7 +140,7 @@ td {
 
 .header h1 {
   margin: 0;
-  font-weight: 600;
+  font-weight: 300;
 }
 
 /* Form */
@@ -473,8 +474,9 @@ tr:hover {
   display: flex;
   gap: 20px;
   overflow-x: auto;
-  height: 500px;
-  padding: 20px 0;
+  overflow-y: visible;
+  padding: 60px 0 40px 0; /* space for scale effect */
+  align-items: flex-start;
   scroll-behavior: smooth;
 }
 
@@ -527,7 +529,7 @@ tr:hover {
 }
 .aircraft-ctype {
   position: absolute;
-  bottom: 318px;
+  bottom: 215px;
   font-size: 13px;
   margin-top: 5px;
   font-weight: 200;
@@ -535,7 +537,7 @@ tr:hover {
 .aircraft-hangar {
   position: absolute;
   right: 15px;
-  bottom: 283px;
+  bottom: 180px;
 }
 
 .rank-badge {
@@ -553,8 +555,7 @@ tr:hover {
 .carousel-wrapper {
   position: relative;
   padding-top: 10px; /* 🔥 space for floating logo */
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow: visible;
 }
 
 .rank-number {
@@ -609,10 +610,9 @@ tr:hover {
 }
 .mspart {
   position: relative;
-  top: 20px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
-
   width: 260px;
   height: 40px;
 
@@ -655,4 +655,106 @@ tr:hover {
   font-size: 0.9rem;
   opacity: 0.8;
   text-align: center;
+}
+/* ================= CENTER POP EFFECT ================= */
+
+.aircraft-card {
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.aircraft-card.active {
+  transform: scale(1.15);
+  z-index: 10;
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.15),
+    0 25px 60px rgba(5, 22, 77, 0.25);
+}
+.aircraft-carousel {
+  scroll-snap-type: x mandatory;
+}
+
+.aircraft-card {
+  scroll-snap-align: center;
+}
+.aircraft-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.aircraft-carousel {
+  scrollbar-width: none;
+}
+/* ================= EDGE NAV BUTTONS ================= */
+
+.carousel-wrapper {
+  position: relative;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+
+  background: rgba(5, 22, 77, 0.85);
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 20;
+  transition: all 0.25s ease;
+}
+
+.carousel-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  color: #a2a3a8;
+}
+
+.carousel-btn.left {
+  left: -20px;
+}
+
+.carousel-btn.right {
+  right: -20px;
+}
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #c9c9ce;
+  width: 60px; /* bigger circle */
+  height: 60px; /* bigger circle */
+  border-radius: 50%;
+  border: none;
+
+  font-size: 80px; /* bigger arrow icon */
+  font-weight: 200; /* thicker arrow */
+
+  cursor: pointer;
+
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 20;
+  transition: all 0.25s ease;
+}
+
+.carousel-btn:hover {
+  transform: translateY(-50%) scale(1.15);
+}
+.aircraft-carousel:focus-visible {
+  outline: none;
 }
