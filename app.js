@@ -123,6 +123,15 @@ function calculateMetrics(inputDate, outputDate) {
     daysSince: diffDays + 1,
   };
 }
+let scrollTimeout;
+
+carousel.addEventListener("scroll", () => {
+  clearTimeout(scrollTimeout);
+
+  scrollTimeout = setTimeout(() => {
+    snapToClosestCard();
+  }, 10000); // adjust delay if needed
+});
 function renderAircraftCards() {
   const container = document.getElementById("aircraftCarousel");
   container.innerHTML = "";
@@ -144,38 +153,66 @@ function renderAircraftCards() {
     }
 
     card.innerHTML = `
-  <div class="airline-logo-float">
-  <img
-    src="${getAirlineLogo(item.Customer)}"
-    alt="${item.Customer}"
-  />
-</div>
+      <div class="airline-logo-float">
+      <img
+        src="${getAirlineLogo(item.Customer)}"
+        alt="${item.Customer}"
+      />
+    </div>
 
-<div class="aircraft-header">${item.Title}
+    <div class="aircraft-header">${item.Title}
 
-<div class="aircraft-ctype">${item.CheckType || ""}</div>
-<div class="rank-badge">${rankDisplay}</div>
-</div>
-<div class="aircraft-sub">_________________________________________________</div>
-      <div class="aircraft-meta"><strong>Bay Production:</strong> ${item.BayProduction || ""}
-      <div class="aircraft-hangar"><strong>Hangar:</strong> ${item.BayParking || ""}</div>
-      </div>
-      
-      <div class="aircraft-meta"><strong>Input:</strong> ${formatDate(item.InputDate)}</div>
-      <div class="aircraft-meta"><strong>Output:</strong> ${formatDate(item.OutputDate)}</div>
-      <div class="aircraft-meta"><strong>TAT:</strong> ${item.TAT || ""} Days</div>
-      <div class="aircraft-meta"><strong>WO:</strong> ${item.ParentWO || ""}</div>
-      <div class="mspart">
-     <div class="aircraft-meta">
-  <strong>MS target: WP, AMM & Job Cards</strong>
-  <span class="ms-date">${formatDate(item.WP_AMM_JC_Target)}</span>
-</div>       
+    <div class="aircraft-ctype">${item.CheckType || ""}</div>
+    <div class="rank-badge">${rankDisplay}</div>
+    </div>
+    <div class="aircraft-sub">_________________________________________________</div>
+          <div class="aircraft-meta"><strong>Bay Production:</strong> ${item.BayProduction || ""}
+          <div class="aircraft-hangar"><strong>Hangar:</strong> ${item.BayParking || ""}</div>
+          </div>
+          
+          <div class="aircraft-meta"><strong>Input:</strong> ${formatDate(item.InputDate)}</div>
+          <div class="aircraft-meta"><strong>Output:</strong> ${formatDate(item.OutputDate)}</div>
+          <div class="aircraft-meta"><strong>TAT:</strong> ${item.TAT || ""} Days</div>
+          <div class="aircraft-meta"><strong>WO:</strong> ${item.ParentWO || ""}</div>
+          <div class="mspart">
+        <div class="aircraft-meta">
+      <strong>MS target: WP, AMM & Job Cards</strong>
+      <span class="ms-date">${formatDate(item.WP_AMM_JC_Target)}</span>
+    </div>       
     `;
 
     container.appendChild(card);
   });
+setTimeout(() => {
+  scrollToClosestPositive();
+}, 100);
 
+}
 
+function updateActiveCard() {
+  const cards = document.querySelectorAll(".aircraft-card");
+  const carouselRect = carousel.getBoundingClientRect();
+  const carouselCenter = carouselRect.left + carouselRect.width / 2;
+
+  let closestCard = null;
+  let closestDistance = Infinity;
+
+  cards.forEach(card => {
+    const rect = card.getBoundingClientRect();
+    const cardCenter = rect.left + rect.width / 2;
+    const distance = Math.abs(carouselCenter - cardCenter);
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestCard = card;
+    }
+  });
+
+  cards.forEach(card => card.classList.remove("active"));
+
+  if (closestCard) {
+    closestCard.classList.add("active");
+  }
 }
 
 // =====================
@@ -269,6 +306,8 @@ function animate() {
 
   animationFrame = requestAnimationFrame(animate);
   updateArrowVisibility();
+  updateActiveCard();
+
 }
 
 function startScroll(dir) {
@@ -409,10 +448,123 @@ cancelDeleteBtn.addEventListener("click", () => {
   closeConfirmModal();
 });
 document.addEventListener("DOMContentLoaded", () => {
-  // Attach arrow listeners safely
- 
- 
 
-  // Load data
+  carousel.addEventListener("scroll", updateActiveCard);
+  window.addEventListener("resize", updateActiveCard);
+
   loadList();
+
+  setTimeout(() => {
+    carousel.focus();
+  }, 150);
+
 });
+function snapToClosestCard() {
+  const cards = document.querySelectorAll(".aircraft-card");
+  if (!cards.length) return;
+
+  const carouselCenter = carousel.scrollLeft + carousel.clientWidth / 2;
+
+  let closestCard = null;
+  let closestDistance = Infinity;
+
+  cards.forEach(card => {
+    const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+    const distance = Math.abs(carouselCenter - cardCenter);
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestCard = card;
+    }
+  });
+
+  if (closestCard) {
+    const targetScroll =
+      closestCard.offsetLeft -
+      (carousel.clientWidth / 2 - closestCard.offsetWidth / 2);
+
+    carousel.scrollTo({
+      left: targetScroll,
+      behavior: "smooth"
+    });
+  }
+}
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+
+function scrollOneCard(direction) {
+  const cards = document.querySelectorAll(".aircraft-card");
+  if (!cards.length) return;
+
+  const carouselCenter = carousel.scrollLeft + carousel.clientWidth / 2;
+
+  let closestCard = null;
+  let closestDistance = Infinity;
+
+  cards.forEach(card => {
+    const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+    const distance = Math.abs(carouselCenter - cardCenter);
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestCard = card;
+    }
+  });
+
+  if (!closestCard) return;
+
+  let targetIndex = Array.from(cards).indexOf(closestCard);
+  targetIndex += direction;
+
+  if (targetIndex < 0) targetIndex = 0;
+  if (targetIndex >= cards.length) targetIndex = cards.length - 1;
+
+  const targetCard = cards[targetIndex];
+
+  const targetScroll =
+    targetCard.offsetLeft -
+    (carousel.clientWidth / 2 - targetCard.offsetWidth / 2);
+
+  carousel.scrollTo({
+    left: targetScroll,
+    behavior: "smooth"
+  });
+}
+
+prevBtn.addEventListener("click", () => scrollOneCard(-1));
+nextBtn.addEventListener("click", () => scrollOneCard(1));
+
+function scrollToClosestPositive() {
+  const cards = document.querySelectorAll(".aircraft-card");
+  if (!cards.length) return;
+
+  let targetItem = null;
+  let smallestDistance = Infinity;
+
+  // Find positive rank closest to 0
+  state.items.forEach(item => {
+    if (item.rank > 0) {
+      if (item.rank < smallestDistance) {
+        smallestDistance = item.rank;
+        targetItem = item;
+      }
+    }
+  });
+
+  if (!targetItem) return;
+
+  const index = state.items.findIndex(i => i === targetItem);
+  const targetCard = cards[index];
+  if (!targetCard) return;
+
+  const targetScroll =
+    targetCard.offsetLeft -
+    (carousel.clientWidth / 2 - targetCard.offsetWidth / 2);
+
+  carousel.scrollTo({
+    left: targetScroll,
+    behavior: "auto"
+  });
+
+  updateActiveCard();
+}
