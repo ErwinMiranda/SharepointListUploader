@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Layovber Manager</title>
+    <title>Layover Manager</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -49,7 +49,13 @@
         <div class="card table-card">
           <section class="report-section">
             <div class="carousel-wrapper">
-              <div id="aircraftCarousel" class="aircraft-carousel"></div>
+              <button class="carousel-btn left" id="prevBtn">‹</button>
+              <div
+                id="aircraftCarousel"
+                class="aircraft-carousel"
+                tabindex="0"
+              ></div>
+              <button class="carousel-btn right" id="nextBtn">›</button>
             </div>
           </section>
         </div>
