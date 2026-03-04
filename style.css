@@ -529,7 +529,7 @@ tr:hover {
 }
 .aircraft-ctype {
   position: absolute;
-  bottom: 215px;
+  bottom: 347px;
   font-size: 13px;
   margin-top: 5px;
   font-weight: 200;
@@ -537,7 +537,7 @@ tr:hover {
 .aircraft-hangar {
   position: absolute;
   right: 15px;
-  bottom: 180px;
+  bottom: 312px;
 }
 
 .rank-badge {
@@ -757,4 +757,111 @@ tr:hover {
 }
 .aircraft-carousel:focus-visible {
   outline: none;
+}
+/* ===== CLEAN MINI GAUGE ===== */
+
+.gauge-title {
+  font-size: 12px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+/* Container */
+.gauge {
+  position: relative;
+  width: 70px; /* proper proportion */
+  height: 35px;
+  margin: auto;
+  overflow: hidden;
+}
+
+/* Track */
+.gauge-track {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+
+  left: 0;
+  background: #e6e6e6;
+}
+
+/* Needle */
+.gauge-needle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  height: 20px;
+  background: #2e3a59;
+  border-radius: 3px;
+
+  transform-origin: bottom center;
+  transform: translateX(-50%)
+    rotate(calc((var(--percent) / 100) * 180deg - 90deg));
+
+  transition: transform 0.8s ease;
+  z-index: 5;
+}
+
+/* Center */
+.gauge-center {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: #2e3a59;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+}
+
+/* Labels */
+.gauge-label {
+  font-size: 10px;
+  font-weight: 200;
+}
+
+.gauge-min {
+  position: relative;
+  bottom: -22px;
+  left: 1px;
+}
+
+.gauge-mid {
+  position: relative;
+  top: -17px;
+  left: 90%;
+  transform: translateX(-50%);
+}
+
+.gauge-max {
+  position: relative;
+  bottom: -24px;
+  top: -5px;
+  right: -55px;
+}
+.gauge-big-value {
+  font-size: 14px;
+  text-align: center;
+  margin-top: 3px;
+}
+/* ===== 4 GAUGE GRID ===== */
+
+.gauge-grid {
+  display: grid;
+  grid-template-columns: 0fr 1fr;
+  gap: 2px;
+  margin-top: 15px;
+}
+
+/* smaller cards for 2x2 */
+.gauge-card {
+  width: 70px;
+  padding: 8px;
+  border-radius: 12px;
+  background: lightcyan;
+  margin-top: 3px;
+  margin-left: 25px;
 }
