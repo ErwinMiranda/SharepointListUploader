@@ -529,7 +529,7 @@ tr:hover {
 }
 .aircraft-ctype {
   position: absolute;
-  bottom: 347px;
+  bottom: 437px;
   font-size: 13px;
   margin-top: 5px;
   font-weight: 200;
@@ -537,7 +537,7 @@ tr:hover {
 .aircraft-hangar {
   position: absolute;
   right: 15px;
-  bottom: 312px;
+  bottom: 403px;
 }
 
 .rank-badge {
