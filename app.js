@@ -137,8 +137,10 @@ function renderAircraftCards() {
   container.innerHTML = "";
 
   state.items.forEach((item) => {
+    //console.log(item);
     if (item.rank === null) return;
-
+  
+    const percent = calculateMSProgress(item);
     const card = document.createElement("div");
     card.className = "aircraft-card";
 
@@ -175,13 +177,63 @@ function renderAircraftCards() {
           <div class="aircraft-meta"><strong>TAT:</strong> ${item.TAT || ""} Days</div>
           <div class="aircraft-meta"><strong>WO:</strong> ${item.ParentWO || ""}</div>
           <div class="mspart">
-        <div class="aircraft-meta">
-      <strong>MS target: WP, AMM & Job Cards</strong>
-      <span class="ms-date">${formatDate(item.WP_AMM_JC_Target)}</span>
-    </div>       
+  <div class="aircraft-meta">
+    <strong>MS target: WP, AMM & Job Cards</strong>
+    <span class="ms-date">${formatDate(item.WP_AMM_JC_Target)}</span>
+  </div>
+</div>
+
+<div class="gauge-grid">
+
+  <div class="gauge-card">
+    <div class="gauge-title">LOADED</div>
+    <div class="gauge" data-percent="${percent}">
+      <div class="gauge-track"></div>
+      <div class="gauge-needle"></div>
+      <div class="gauge-center"></div>
+    </div>
+    <div class="gauge-big-value">${percent}%</div>
+  </div>
+
+  <div class="gauge-card">
+    <div class="gauge-title">CREATED</div>
+    <div class="gauge" data-percent="40">
+      <div class="gauge-track"></div>
+      <div class="gauge-needle"></div>
+      <div class="gauge-center"></div>
+    </div>
+    <div class="gauge-big-value">40%</div>
+  </div>
+
+  <div class="gauge-card">
+    <div class="gauge-title">PRINTED</div>
+    <div class="gauge" data-percent="70">
+      <div class="gauge-track"></div>
+      <div class="gauge-needle"></div>
+      <div class="gauge-center"></div>
+    </div>
+    <div class="gauge-big-value">70%</div>
+  </div>
+
+  <div class="gauge-card">
+    <div class="gauge-title">ISSUED</div>
+    <div class="gauge" data-percent="85">
+      <div class="gauge-track"></div>
+      <div class="gauge-needle"></div>
+      <div class="gauge-center"></div>
+    </div>
+    <div class="gauge-big-value">85%</div>
+  </div>
+
+</div>
     `;
 
     container.appendChild(card);
+const gauges = card.querySelectorAll(".gauge");
+gauges.forEach(gauge => {
+  const percent = gauge.getAttribute("data-percent") || 0;
+  gauge.style.setProperty("--percent", percent);
+});
   });
 setTimeout(() => {
   scrollToClosestPositive();
@@ -214,7 +266,18 @@ function updateActiveCard() {
     closestCard.classList.add("active");
   }
 }
+function calculateMSProgress(item) {
 
+  const open = Number(item.TCOpen) || 0;
+  const closed = Number(item.TCClosed) || 0;
+  const loaded = Number(item.Loaded_x0028_MPD_x0029_TC) || 0;
+
+  const total = open + closed;
+
+  if (total === 0) return 0;
+
+  return Math.round((loaded / total) * 100);
+}
 // =====================
 // GENERIC API CALL
 // =====================
