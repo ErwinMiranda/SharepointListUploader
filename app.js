@@ -137,10 +137,13 @@ function renderAircraftCards() {
   container.innerHTML = "";
 
   state.items.forEach((item) => {
-    //console.log(item);
+   //console.log(item);
     if (item.rank === null) return;
   
-    const percent = calculateMSProgress(item);
+    const percentLoaded = calculateTCLoaded(item);
+    const percentCreated = calculateTCcreated(item);
+    const percentPrinted = calculateTCPrinted(item);
+    const percentIssued = calculateTCIssued(item);
     const card = document.createElement("div");
     card.className = "aircraft-card";
 
@@ -186,49 +189,49 @@ function renderAircraftCards() {
 <div class="gauge-grid">
 
   <div class="gauge-card">
-    <div class="gauge-title">LOADED</div>
-    <div class="gauge" data-percent="${percent}">
+    <div class="gauge-title">CREATED</div>
+    <div class="gauge" data-percent="${percentCreated}">
       <div class="gauge-track"></div>
       <div class="gauge-needle"></div>
       <div class="gauge-center"></div>
     </div>
-    <div class="gauge-big-value">${percent}%</div>
+    <div class="gauge-big-value">${percentCreated}%</div>
   </div>
 
   <div class="gauge-card">
-    <div class="gauge-title">CREATED</div>
-    <div class="gauge" data-percent="40">
+    <div class="gauge-title">LOADED</div>
+    <div class="gauge" data-percent="${percentLoaded}">
       <div class="gauge-track"></div>
       <div class="gauge-needle"></div>
       <div class="gauge-center"></div>
     </div>
-    <div class="gauge-big-value">40%</div>
+    <div class="gauge-big-value">${percentLoaded}%</div>
   </div>
 
   <div class="gauge-card">
     <div class="gauge-title">PRINTED</div>
-    <div class="gauge" data-percent="70">
+    <div class="gauge" data-percent="${percentPrinted}">
       <div class="gauge-track"></div>
       <div class="gauge-needle"></div>
       <div class="gauge-center"></div>
     </div>
-    <div class="gauge-big-value">70%</div>
+    <div class="gauge-big-value">${percentPrinted}%</div>
   </div>
 
   <div class="gauge-card">
     <div class="gauge-title">ISSUED</div>
-    <div class="gauge" data-percent="85">
+    <div class="gauge" data-percent="${percentIssued}">
       <div class="gauge-track"></div>
       <div class="gauge-needle"></div>
       <div class="gauge-center"></div>
     </div>
-    <div class="gauge-big-value">85%</div>
+    <div class="gauge-big-value">${percentIssued}%</div>
   </div>
 
 </div>
     `;
 
-    container.appendChild(card);
+   container.appendChild(card);
 const gauges = card.querySelectorAll(".gauge");
 gauges.forEach(gauge => {
   const percent = gauge.getAttribute("data-percent") || 0;
@@ -238,46 +241,64 @@ gauges.forEach(gauge => {
 setTimeout(() => {
   scrollToClosestPositive();
 }, 100);
-
 }
 
 function updateActiveCard() {
   const cards = document.querySelectorAll(".aircraft-card");
   const carouselRect = carousel.getBoundingClientRect();
   const carouselCenter = carouselRect.left + carouselRect.width / 2;
-
   let closestCard = null;
   let closestDistance = Infinity;
-
   cards.forEach(card => {
     const rect = card.getBoundingClientRect();
     const cardCenter = rect.left + rect.width / 2;
     const distance = Math.abs(carouselCenter - cardCenter);
-
     if (distance < closestDistance) {
       closestDistance = distance;
       closestCard = card;
     }
   });
-
   cards.forEach(card => card.classList.remove("active"));
-
   if (closestCard) {
     closestCard.classList.add("active");
   }
 }
-function calculateMSProgress(item) {
-
+function calculateTCLoaded(item) {
   const open = Number(item.TCOpen) || 0;
   const closed = Number(item.TCClosed) || 0;
   const loaded = Number(item.Loaded_x0028_MPD_x0029_TC) || 0;
-
   const total = open + closed;
-
   if (total === 0) return 0;
-
   return Math.round((loaded / total) * 100);
 }
+function calculateTCcreated(item) {
+  const open = Number(item.TCOpen) || 0;
+  const closed = Number(item.TCClosed) || 0;;
+  const total = open + closed;
+  if (total === 0) return 0;
+  return Math.round((closed / total) * 100);
+}
+function calculateTCPrinted(item) {
+  const open = Number(item.TCOpen) || 0;
+  const closed = Number(item.TCClosed) || 0;
+  const loaded = Number(item.Loaded_x0028_MPD_x0029_TC) || 0;
+  const printed = Number(item.Printed_x0028_MTC_x0029_) || 0;
+  const loadedmtc =Number(item.Loaded_x0028_MTC_x0029_) || 0;
+  const total = open + closed;
+  if (printed === 0) return 0;
+  return Math.round(((printed / loadedmtc) * 100)*((loaded/total)*100)/100);
+}
+function calculateTCIssued(item) {
+  const open = Number(item.TCOpen) || 0;
+  const closed = Number(item.TCClosed) || 0;
+  const loaded = Number(item.Loaded_x0028_MPD_x0029_TC) || 0;
+  const printed = Number(item.Printed_x0028_MTC_x0029_) || 0;
+  const distributedtc = Number(item.DistributedMTC) || 0;
+  const total = open + closed;
+  if (distributedtc === 0) return 0;
+  return Math.round(((distributedtc / printed) * 100)*((loaded/total)*100)/100);
+}
+
 // =====================
 // GENERIC API CALL
 // =====================
