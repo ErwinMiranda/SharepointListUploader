@@ -137,7 +137,7 @@ function renderAircraftCards() {
   container.innerHTML = "";
 
   state.items.forEach((item) => {
-   //console.log(item);
+   console.log(item);
     if (item.rank === null) return;
   
     const percentLoaded = calculateTCLoaded(item);
